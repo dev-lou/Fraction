@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
+    }
+  },
+  "routes": [
+    { "src": "/(.*)", "dest": "/$1" }
+  ],
+  "github": {
+    "enabled": true,
+    "silent": false
+  }
+}
