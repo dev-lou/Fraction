@@ -1,10 +1,15 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import { JetBrains_Mono, Space_Grotesk } from 'next/font/google';
-import { PropertyCard } from '../../components/Dashboard/PropertyCard';
-import { PROPERTIES, type PropertyStatus } from '@/lib/properties';
+const LoadingCard = () => (
+  <div className="h-full rounded-2xl border border-neutral-800/70 bg-neutral-900/50 p-4 animate-pulse" />
+);
+const ListingCard = dynamic(() => import('@/components/Dashboard/ListingCard').then((m) => m.ListingCard), { ssr: false, loading: () => <LoadingCard /> });
+const InvestModal = dynamic(() => import('@/components/InvestModal').then((m) => m.InvestModal), { ssr: false });
+import { PROPERTIES, type PropertyStatus, type Property } from '@/lib/properties';
+
 
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], display: 'swap', variable: '--font-space' });
 const jetBrainsMono = JetBrains_Mono({ subsets: ['latin'], display: 'swap', variable: '--font-jetbrains' });
@@ -17,6 +22,8 @@ const statusFilters: { label: string; value: 'all' | PropertyStatus }[] = [
 ];
 
 export default function PropertiesPage() {
+  // Lift properties to state to allow real-time updates
+  const [properties, setProperties] = useState(PROPERTIES);
   const [status, setStatus] = useState<'all' | PropertyStatus>('all');
   const [city, setCity] = useState<string>('all');
 
@@ -24,13 +31,38 @@ export default function PropertiesPage() {
 
   const filtered = useMemo(
     () =>
-      PROPERTIES.filter((p) => (status === 'all' ? true : p.status === status) && (city === 'all' ? true : p.city === city)),
-    [status, city],
+      properties.filter((p) => (status === 'all' ? true : p.status === status) && (city === 'all' ? true : p.city === city)),
+    [status, city, properties],
   );
 
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+
+  // Use a hardcoded registry address for the prototype or env var
+  const registryAddress = (process.env.NEXT_PUBLIC_PROPERTY_REGISTRY_ADDRESS as `0x${string}`) || '0x0000000000000000000000000000000000000000';
+
+  // Callback to update local state immediately after a successful investment
+  const handleInvestSuccess = (amountInvestedTokens: number) => {
+    if (!selectedProperty) return;
+
+    setProperties((prev) =>
+      prev.map((p) => {
+        if (p.title === selectedProperty.title) {
+          const newAvailable = Math.max(0, p.available - amountInvestedTokens);
+          return {
+            ...p,
+            available: newAvailable,
+            status: newAvailable === 0 ? 'sold-out' : p.status,
+          };
+        }
+        return p;
+      })
+    );
+    setSelectedProperty(null); // Close modal
+  };
+
   return (
-    <main className="min-h-screen bg-[#0a0a0a] px-0 py-12 text-neutral-100 sm:px-4 md:px-6 lg:px-8">
-      <div className="w-full space-y-8">
+    <main className="min-h-screen bg-[#0a0a0a] py-12 text-neutral-100">
+      <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8 space-y-8">
         <header className="space-y-2">
           <h1 className={`${spaceGrotesk.className} text-3xl font-bold text-neutral-50`}>Properties</h1>
           <p className={`${jetBrainsMono.className} text-sm text-neutral-400`}>
@@ -43,9 +75,8 @@ export default function PropertiesPage() {
             <button
               key={f.value}
               onClick={() => setStatus(f.value)}
-              className={`rounded-full border px-3 py-2 text-sm font-semibold transition ${
-                status === f.value ? 'border-lime-300/70 bg-lime-300/10 text-lime-200' : 'border-neutral-800 bg-neutral-900 text-neutral-200'
-              }`}
+              className={`rounded-full border px-3 py-2 text-sm font-semibold transition ${status === f.value ? 'border-lime-300/70 bg-lime-300/10 text-lime-200' : 'border-neutral-800 bg-neutral-900 text-neutral-200'
+                }`}
             >
               {f.label}
             </button>
@@ -64,21 +95,25 @@ export default function PropertiesPage() {
           </select>
         </div>
 
-        <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((prop, idx) => (
-            <motion.div
-              key={prop.title}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-10%' }}
-              transition={{ duration: 0.4, delay: idx * 0.04 }}
-            >
-              <PropertyCard property={prop} ctaHref={`/properties`} />
-            </motion.div>
+            <div key={prop.title} className="h-full">
+              <ListingCard property={prop} onInvest={() => setSelectedProperty(prop)} />
+            </div>
           ))}
           {filtered.length === 0 && <p className="text-sm text-neutral-500">No properties match your filters.</p>}
         </section>
       </div>
+
+      {/* simulated invest modal */}
+      {selectedProperty && (
+        <InvestModal
+          property={properties.find(p => p.title === selectedProperty.title) || selectedProperty}
+          registryAddress={registryAddress}
+          onSuccess={handleInvestSuccess}
+          onClose={() => setSelectedProperty(null)}
+        />
+      )}
     </main>
   );
 }

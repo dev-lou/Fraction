@@ -35,7 +35,7 @@ function statusChip(status: Property['status']) {
   }
 }
 
-export function PropertyCard({ property, ctaHref = '/properties', onInvest }: PropertyCardProps) {
+export function ListingCard({ property, ctaHref = '/properties', onInvest }: PropertyCardProps) {
   const { title, apy, tokenPrice, render, status, available, total, city } = property;
   const [src, setSrc] = useState(render || FALLBACK_IMAGE);
   const percentSold = useMemo(() => {

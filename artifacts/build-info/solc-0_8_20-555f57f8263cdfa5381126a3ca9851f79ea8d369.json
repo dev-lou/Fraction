@@ -1,0 +1,35 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_20-555f57f8263cdfa5381126a3ca9851f79ea8d369",
+  "solcVersion": "0.8.20",
+  "solcLongVersion": "0.8.20+commit.a1b79de6",
+  "userSourceNameMap": {
+    "contracts/PropertyRegistry.sol": "project/contracts/PropertyRegistry.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "shanghai",
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/PropertyRegistry.sol": {
+        "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.20;\r\n\r\ncontract PropertyRegistry {\r\n    struct PropertyMeta {\r\n        string slug;\r\n        string title;\r\n        string city;\r\n        uint8 status; // 0=live,1=coming-soon,2=sold-out\r\n        uint256 available;\r\n        uint256 total;\r\n        string blueprint;\r\n        string render;\r\n        string tokenized;\r\n        int32 latE6; // latitude * 1e6\r\n        int32 lngE6; // longitude * 1e6\r\n        uint16 apyBps; // 987 = 9.87%\r\n        uint64 tokenPriceUsdCents; // 108 = $1.08\r\n    }\r\n\r\n    address public immutable owner;\r\n    PropertyMeta[] private properties;\r\n\r\n    event PropertyUpsert(string slug, uint256 index);\r\n    event PropertiesReplaced(uint256 count);\r\n\r\n    modifier onlyOwner() {\r\n        require(msg.sender == owner, \"not owner\");\r\n        _;\r\n    }\r\n\r\n    constructor() {\r\n        owner = msg.sender;\r\n    }\r\n\r\n    function listProperties() external view returns (PropertyMeta[] memory) {\r\n        return properties;\r\n    }\r\n\r\n    function setProperties(PropertyMeta[] calldata next) external onlyOwner {\r\n        delete properties;\r\n        for (uint256 i = 0; i < next.length; i++) {\r\n            properties.push(next[i]);\r\n            emit PropertyUpsert(next[i].slug, i);\r\n        }\r\n        emit PropertiesReplaced(next.length);\r\n    }\r\n\r\n    function upsert(PropertyMeta calldata meta, uint256 index) external onlyOwner {\r\n        if (index < properties.length) {\r\n            properties[index] = meta;\r\n            emit PropertyUpsert(meta.slug, index);\r\n            return;\r\n        }\r\n        properties.push(meta);\r\n        emit PropertyUpsert(meta.slug, properties.length - 1);\r\n    }\r\n\r\n    event PropertySold(string slug, uint256 quantity, address buyer);\r\n\r\n    function invest(string calldata slug, uint256 quantity) external payable {\r\n        // Find property\r\n        uint256 index = properties.length;\r\n        for(uint256 i=0; i<properties.length; i++) {\r\n             // Simple string comparison by hash\r\n             if(keccak256(bytes(properties[i].slug)) == keccak256(bytes(slug))) {\r\n                 index = i;\r\n                 break;\r\n             }\r\n        }\r\n        require(index < properties.length, \"Property not found\");\r\n        \r\n        PropertyMeta storage p = properties[index];\r\n        require(p.available >= quantity, \"Not enough tokens available\");\r\n\r\n        // Hardcoded Price for Demo: 0.001 ETH per token\r\n        uint256 cost = quantity * 0.001 ether;\r\n        require(msg.value >= cost, \"Insufficient funds sent\");\r\n\r\n        // Update state\r\n        p.available -= quantity;\r\n        \r\n        emit PropertySold(slug, quantity, msg.sender);\r\n    }\r\n}\r\n"
+      }
+    }
+  }
+}

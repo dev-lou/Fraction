@@ -1,16 +1,14 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import { useContext } from 'react';
-import { WagmiMountedContext } from './Providers';
 import PortfolioInner from './PortfolioInner';
+import { useAccount } from 'wagmi';
 
-const PortfolioWithAddress = dynamic(() => import('@/components/PortfolioWithAddress'), { ssr: false });
+export default function PortfolioWithAddress() {
+  const { isConnected, address } = useAccount();
+  const ownerAddress = (isConnected && address) ? address.toLowerCase() : undefined;
+  const ownerKey = ownerAddress;
 
-export function PortfolioClient() {
-  const wagmiMounted = useContext(WagmiMountedContext);
-
-  if (!wagmiMounted) {
+  if (!isConnected || !ownerKey) {
     return (
       <main className="min-h-screen bg-[#0a0a0a] py-12 text-neutral-100">
         <div className="mx-auto max-w-screen-lg px-4 sm:px-6 lg:px-8 text-center space-y-4">
@@ -21,6 +19,11 @@ export function PortfolioClient() {
     );
   }
 
-  return <PortfolioWithAddress />;
-}
+  return (
+    <div>
+      <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-6" />
 
+      <PortfolioInner ownerKey={ownerKey} />
+    </div>
+  );
+}

@@ -12,7 +12,8 @@ import {
 import { useMemo, useRef, useState, useEffect, type RefObject } from 'react';
 import { JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 import MapContainer from '../components/Dashboard/MapContainer';
-import { PropertyCard } from '../components/Dashboard/PropertyCard';
+import { ListingCard } from '@/components/Dashboard/ListingCard';
+import { InvestModal } from '@/components/InvestModal';
 import { PROPERTIES } from '@/lib/properties';
 import { MagneticButton } from '@/components/ui/MagneticButton';
 import { StatsMarquee } from '@/components/ui/StatsMarquee';
@@ -60,7 +61,7 @@ function HeroSection() {
   const tokenOpacity = useTransform(heroProgress, [0.6, 1], [0, 1]);
 
   return (
-    <section ref={heroRef} className="relative overflow-hidden rounded-3xl border border-neutral-900/60 bg-gradient-to-br from-neutral-950 via-neutral-900/70 to-[#0b0b0b] px-6 py-16 md:px-10 md:py-20 min-h-[70vh]">
+    <section ref={heroRef} className="relative overflow-hidden rounded-3xl border border-neutral-900/60 bg-gradient-to-br from-neutral-950 via-neutral-900/70 to-[#0b0b0b] px-4 py-8 md:px-10 md:py-20 min-h-[70vh]">
       <div className="pointer-events-none absolute inset-0">
         <motion.div
           className="absolute -left-32 top-10 h-64 w-64 rounded-full bg-gradient-to-br from-lime-400/15 via-emerald-300/10 to-cyan-300/10 blur-3xl"
@@ -88,7 +89,7 @@ function HeroSection() {
         </div>
       </div>
 
-      <div className="relative z-10 grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+      <div className="relative z-10 mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8 grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
         <div className="space-y-8">
           <motion.p
             className={`${jetBrainsMono.className} inline-flex items-center gap-2 rounded-full border border-neutral-800/60 bg-black/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-neutral-50 backdrop-blur-sm shadow-[0_6px_20px_rgba(0,0,0,0.6)]`}
@@ -321,7 +322,7 @@ function BuildingsMapSection() {
             </div>
           </div>
 
-      </div>
+        </div>
 
       </div>
 
@@ -499,7 +500,7 @@ export default function Page() {
                 viewport={{ once: true, margin: '-10%' }}
                 transition={{ duration: 0.45, delay: idx * 0.05 }}
               >
-                <PropertyCard property={property} />
+                <ListingCard property={property} />
               </motion.div>
             ))}
           </div>
