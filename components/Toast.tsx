@@ -6,47 +6,31 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function Toast({ message, type = 'success', open = true, onClose }: { message: string; type?: 'success'|'error'|'info'; open?: boolean; onClose?: () => void }) {
   useEffect(() => {
     if (!open) return;
-    const t = setTimeout(() => onClose?.(), 2500);
+    const t = setTimeout(() => onClose?.(), 3500);
     return () => clearTimeout(t);
   }, [open, onClose]);
 
-  const bg = type === 'success' ? 'linear-gradient(180deg, rgba(16,185,129,0.06), rgba(16,185,129,0.02))' : type === 'error' ? 'linear-gradient(180deg, rgba(239,68,68,0.06), rgba(239,68,68,0.02))' : 'linear-gradient(180deg, rgba(59,130,246,0.06), rgba(59,130,246,0.02))';
-  const border = type === 'success' ? 'rgba(16,185,129,0.16)' : type === 'error' ? 'rgba(239,68,68,0.16)' : 'rgba(59,130,246,0.16)';
+  const accent = type === 'success' ? 'bg-lime-400' : type === 'error' ? 'bg-rose-500' : 'bg-sky-400';
 
   return (
     <AnimatePresence>
       {open && (
         <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.25 }}
-          style={{
-            background: bg,
-            border: `1px solid ${border}`,
-            color: '#d1fae5',
-          }}
-          className="fixed right-6 top-6 z-[99999] rounded-lg px-4 py-3 shadow-md max-w-sm backdrop-blur"
+          initial={{ opacity: 0, y: -10, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -8, scale: 0.98 }}
+          transition={{ duration: 0.18 }}
+          className="fixed right-6 top-6 z-[99999] max-w-sm"
+          role="status"
+          aria-live="polite"
         >
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5">
-              {type === 'success' ? (
-                <svg className="h-5 w-5 text-lime-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 6L9 17l-5-5" />
-                </svg>
-              ) : type === 'error' ? (
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="h-5 w-5 text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2v10" />
-                  <circle cx="12" cy="17" r="1" />
-                </svg>
-              )}
-            </div>
-            <div>
-              <div className="text-sm font-semibold text-neutral-50">{message}</div>
+          <div className="rounded-lg shadow-md overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.04)' }}>
+            <div className="flex items-center gap-3 p-3 bg-[#081014]/40 backdrop-blur">
+              <div className={`flex h-9 w-9 items-center justify-center rounded-full ${accent} text-black`}>✓</div>
+              <div className="flex-1">
+                <div className="text-sm font-semibold text-neutral-50">{message}</div>
+              </div>
+              <button onClick={() => onClose?.()} className="text-neutral-400 hover:text-neutral-200 ml-2" aria-label="Close notification">✕</button>
             </div>
           </div>
         </motion.div>

@@ -8,6 +8,7 @@ const LoadingCard = () => (
 );
 const ListingCard = dynamic(() => import('@/components/Dashboard/ListingCard').then((m) => m.ListingCard), { ssr: false, loading: () => <LoadingCard /> });
 const InvestModal = dynamic(() => import('@/components/InvestModal').then((m) => m.InvestModal), { ssr: false });
+import SweetAlert from '@/components/SweetAlert';
 import { PROPERTIES, type PropertyStatus, type Property } from '@/lib/properties';
 
 
@@ -26,6 +27,12 @@ export default function PropertiesPage() {
   const [properties, setProperties] = useState(PROPERTIES);
   const [status, setStatus] = useState<'all' | PropertyStatus>('all');
   const [city, setCity] = useState<string>('all');
+
+  const [sweetAlert, setSweetAlert] = useState<{ open: boolean; title: string; text: string; }>({
+    open: false,
+    title: '',
+    text: '',
+  });
 
   const cities = useMemo(() => ['all', ...Array.from(new Set(PROPERTIES.map((p) => p.city)))], []);
 
@@ -57,7 +64,18 @@ export default function PropertiesPage() {
         return p;
       })
     );
+
+    const propTitle = selectedProperty.title;
     setSelectedProperty(null); // Close modal
+
+    // Show success alert after modal closes
+    setTimeout(() => {
+      setSweetAlert({
+        open: true,
+        title: 'Investment successful',
+        text: `You purchased ${amountInvestedTokens.toLocaleString('en-US')} tokens of ${propTitle}.`,
+      });
+    }, 300);
   };
 
   return (
@@ -114,6 +132,16 @@ export default function PropertiesPage() {
           onClose={() => setSelectedProperty(null)}
         />
       )}
+
+      {/* Success Alert */}
+      <SweetAlert
+        open={sweetAlert.open}
+        title={sweetAlert.title}
+        text={sweetAlert.text}
+        icon="success"
+        confirmText="Done"
+        onConfirm={() => setSweetAlert(prev => ({ ...prev, open: false }))}
+      />
     </main>
   );
 }
